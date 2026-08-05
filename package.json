@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "A small self-hosted service that makes Pi Sign-in easy",
   "private": true,
-  "license": "AGPL-3.0-only",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",

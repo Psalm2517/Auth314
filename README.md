@@ -6,7 +6,7 @@
 
 **A self-hosted solution that simplifies the Pi Sign-in OAuth flow.**
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](./LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 [![CI](https://github.com/Psalm2517/auth314/actions/workflows/ci.yml/badge.svg)](https://github.com/Psalm2517/auth314/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 
@@ -141,4 +141,4 @@ passing a `Config` to `handleRequest`.
 
 ## License
 
-AGPL-3.0. See [LICENSE](./LICENSE).
+Apache 2.0. See [LICENSE](./LICENSE).
