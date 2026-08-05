@@ -4,7 +4,7 @@
 
 # Auth314
 
-**A self-hosted core service that simplifies the Pi Sign-in OAuth flow.**
+**A self-hosted solution that simplifies the Pi Sign-in OAuth flow.**
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](./LICENSE)
 [![CI](https://github.com/Psalm2517/auth314/actions/workflows/ci.yml/badge.svg)](https://github.com/Psalm2517/auth314/actions/workflows/ci.yml)
