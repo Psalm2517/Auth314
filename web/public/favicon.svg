@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-<path id="shieldPath" d="M100,30 C142,30 168,46 168,46 L168,98 C168,144 138,170 100,178 C62,170 32,144 32,98 L32,46 C32,46 58,30 100,30 Z" fill="#e7e8ea"></path>
-<clipPath id="shieldClip"><use href="#shieldPath"></use></clipPath>
-<g clip-path="url(#shieldClip)">
-<polygon points="32,30 112,30 58,178 32,178" fill="#f8f8fa"></polygon>
-<polygon points="168,46 168,140 120,178 88,178" fill="#c6c7cc"></polygon>
-</g>
-</svg>

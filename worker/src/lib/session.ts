@@ -8,8 +8,6 @@ export interface CreateSessionInput {
   platform_user_id: string;
   guild_id: string;
   callback_url: string;
-  key_id: string;
-  owner_id: string;
 }
 
 export interface CreatedSession {
@@ -41,8 +39,6 @@ export async function createSession(
     callback_url: input.callback_url,
     expires_at: expiresAt,
     used: false,
-    key_id: input.key_id,
-    owner_id: input.owner_id,
   };
   await putSession(env, token, record);
   return { token, record };

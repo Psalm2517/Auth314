@@ -15,21 +15,26 @@ you in the fix (unless you'd prefer to stay anonymous).
 
 ## Scope
 
-This applies to the Auth314 core service (this repo), the dashboard, the
-Discord bot, and the marketing/docs sites. It does not cover Pi Network's own
-infrastructure -- report those to the Pi Core Team directly.
+This applies to the Auth314 core service in this repository. Auth314 is
+self-hosted -- there is no hosted instance to report against, and the security
+of any given deployment is the operator's responsibility. Pi Network's own
+infrastructure is out of scope; report those issues to the Pi Core Team
+directly.
 
 ## What we consider in scope
 
-- Authentication or authorization bypass (API keys, dashboard sessions, admin access)
-- Leaking Pi identity (UID, username) to unauthorized parties
+- Authentication or authorization bypass on `/verify/init`
+- Leaking Pi identity (UID, username) into a webhook payload or any other
+  response it shouldn't reach
 - Forging or replaying verification webhooks
-- Injection, XSS, or SSRF in any of the hosted services
-- Secrets or credentials exposed in this or related repos
+- Session token prediction, reuse, or fixation
+- Injection or SSRF in the Worker
+- Secrets or credentials committed to this repo
 
 ## Out of scope
 
 - Missing security headers with no demonstrated impact
-- Rate limiting on non-sensitive endpoints
+- Denial of service
 - Social engineering
-- Denial of service against the hosted infrastructure
+- Misconfiguration of a self-hosted deployment (weak `AUTH_SECRET`, exposed
+  KV namespace, etc.)

@@ -3,8 +3,7 @@ import { error, json } from "../lib/http";
 import { getSession, markSessionUsed, putIdentity, getIdentity } from "../lib/kv";
 import { isSessionExpired } from "../lib/session";
 import { fetchPiMe, PiApiError } from "../lib/pi";
-import { logVerification, incrementGlobalStats, incrementGlobalFailure } from "../lib/verlog";
-import { incrementVerificationCount } from "../lib/apikey";
+import { logVerification } from "../lib/verlog";
 
 interface AuthCallbackBody {
   access_token?: string;
@@ -13,7 +12,7 @@ interface AuthCallbackBody {
 
 /**
  * POST /auth/callback
- * Called by the portal after extracting the access token from the OAuth
+ * Called by your verify UI after extracting the access token from the OAuth
  * redirect fragment.
  */
 export async function handleAuthCallback(
@@ -45,10 +44,6 @@ export async function handleAuthCallback(
   try {
     me = await fetchPiMe(env, access_token);
   } catch (err) {
-    // Skip dashboard logins -- internal, not an operator-facing verification.
-    if (record.platform !== "dashboard") {
-      incrementGlobalFailure(env).catch(() => {});
-    }
     const status = err instanceof PiApiError ? 401 : 502;
     return error(
       `Pi verification failed: ${(err as Error).message}`,
@@ -93,44 +88,23 @@ export async function handleAuthCallback(
 
   // 6. POST the result to the integration's callback_url.
   //
-  // Pi identity (pi_uid, pi_username) is never sent to third-party
-  // integrations per Pi Developer ToS §4. The "dashboard" platform is
-  // Auth314's own internal infrastructure, so pi identity is included there --
-  // but only when the callback actually targets the dashboard's origin.
-  // Anyone with an API key can claim platform "dashboard"; without the origin
-  // check that claim alone would leak pi identity to an arbitrary callback_url.
+  // Pi identity (pi_uid, pi_username) is never sent to integrations, per Pi
+  // Developer ToS §4 -- only a verified signal.
   const callbackPayload: Record<string, unknown> = {
     platform_user_id: record.platform_user_id,
     guild_id: record.guild_id,
     verified: true,
   };
 
-  const isDashboard =
-    record.platform === "dashboard" &&
-    new URL(record.callback_url).origin === env.DASHBOARD_ORIGIN;
-  if (isDashboard) {
-    callbackPayload.pi_uid = me.uid;
-    callbackPayload.pi_username = me.username;
-  }
-
-  // 7. Log the verification and bump the key's completed-verification count.
-  // This happens regardless of whether callback delivery below succeeds --
-  // the Pi sign-in itself is already complete at this point, so an
-  // unreachable operator webhook must not erase that fact.
-  // (Skip for dashboard logins -- these are Auth314's own internal login,
-  // not an operator-facing verification, so they shouldn't appear in either.)
-  if (!isDashboard) {
-    logVerification(env, record.owner_id, {
-      timestamp: new Date().toISOString(),
-      platform: record.platform,
-      guild_id: record.guild_id,
-      platform_user_id: record.platform_user_id,
-      key_id: record.key_id,
-      key_name: "",
-    }).catch(() => {});
-    incrementVerificationCount(env, record.key_id).catch(() => {});
-    incrementGlobalStats(env, record.platform).catch(() => {});
-  }
+  // 7. Log the verification. This happens regardless of whether callback
+  // delivery below succeeds -- the Pi sign-in itself is already complete at
+  // this point, so an unreachable webhook must not erase that fact.
+  logVerification(env, {
+    timestamp: new Date().toISOString(),
+    platform: record.platform,
+    guild_id: record.guild_id,
+    platform_user_id: record.platform_user_id,
+  }).catch(() => {});
 
   try {
     const cbRes = await fetch(record.callback_url, {
@@ -151,18 +125,7 @@ export async function handleAuthCallback(
     );
   }
 
-  // 8. For dashboard logins, tell the portal where to send the user so they
-  // land back on the dashboard with their session cookie set.
-  if (isDashboard) {
-    const dashboardOrigin = new URL(record.callback_url).origin;
-    return json({
-      status: "verified",
-      platform: record.platform,
-      redirect_url: `${dashboardOrigin}/auth/pi/confirm?nonce=${encodeURIComponent(record.platform_user_id)}`,
-    });
-  }
-
-  // 9. Return success to the portal.
+  // 8. Return success to the verify UI.
   return json({
     status: "verified",
     pi_username: me.username,

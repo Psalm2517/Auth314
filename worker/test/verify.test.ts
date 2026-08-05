@@ -2,21 +2,21 @@ import { describe, it, expect } from "vitest";
 import { handleVerifyInit, handleVerifyStatus } from "../src/routes/verify";
 import { getSession, putSession } from "../src/lib/kv";
 import { createSession } from "../src/lib/session";
-import { makeEnv, seedApiKey, TEST_API_KEY } from "./helpers";
+import { makeEnv, TEST_AUTH_SECRET } from "./helpers";
 
 function post(body: unknown): Request {
   return new Request("https://api.example/verify/init", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${TEST_API_KEY}`,
+      Authorization: `Bearer ${TEST_AUTH_SECRET}`,
     },
     body: JSON.stringify(body),
   });
 }
 
 describe("POST /verify/init validation", () => {
-  it("rejects a missing API key", async () => {
+  it("rejects a missing credential", async () => {
     const res = await handleVerifyInit(
       new Request("https://api.example/verify/init", {
         method: "POST",
@@ -34,7 +34,6 @@ describe("POST /verify/init validation", () => {
 
   it("rejects a missing platform_user_id", async () => {
     const env = makeEnv();
-    await seedApiKey(env);
     const res = await handleVerifyInit(
       post({ platform: "discord", callback_url: "https://cb.example" }),
       env,
@@ -44,7 +43,6 @@ describe("POST /verify/init validation", () => {
 
   it("rejects a non-https callback_url", async () => {
     const env = makeEnv();
-    await seedApiKey(env);
     const res = await handleVerifyInit(
       post({
         platform: "discord",
@@ -58,7 +56,6 @@ describe("POST /verify/init validation", () => {
 
   it("rejects a malformed callback_url", async () => {
     const env = makeEnv();
-    await seedApiKey(env);
     const res = await handleVerifyInit(
       post({
         platform: "discord",
@@ -72,19 +69,17 @@ describe("POST /verify/init validation", () => {
 
   it("rejects an invalid JSON body", async () => {
     const env = makeEnv();
-    await seedApiKey(env);
     const req = new Request("https://api.example/verify/init", {
       method: "POST",
-      headers: { Authorization: `Bearer ${TEST_API_KEY}` },
+      headers: { Authorization: `Bearer ${TEST_AUTH_SECRET}` },
       body: "{not json",
     });
     const res = await handleVerifyInit(req, env);
     expect(res.status).toBe(400);
   });
 
-  it("creates a session and returns a portal verify_url", async () => {
+  it("creates a session and returns a verify_url", async () => {
     const env = makeEnv();
-    await seedApiKey(env);
     const res = await handleVerifyInit(
       post({
         platform: "discord",
@@ -113,7 +108,6 @@ describe("POST /verify/init validation", () => {
 
   it("sets CORS headers on responses", async () => {
     const env = makeEnv();
-    await seedApiKey(env);
     const res = await handleVerifyInit(
       post({
         platform: "discord",

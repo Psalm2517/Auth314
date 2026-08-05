@@ -4,63 +4,81 @@
 
 # Auth314
 
-**Verification infrastructure for Pi Sign-in.**
+**A self-hosted core service that simplifies the Pi Sign-in OAuth flow.**
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](./LICENSE)
 [![CI](https://github.com/Psalm2517/auth314/actions/workflows/ci.yml/badge.svg)](https://github.com/Psalm2517/auth314/actions/workflows/ci.yml)
-[![Deploy](https://github.com/Psalm2517/auth314/actions/workflows/deploy.yml/badge.svg)](https://github.com/Psalm2517/auth314/actions/workflows/deploy.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-f38020.svg?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
-
-[Website](https://auth314.com) · [Docs](https://docs.auth314.com) · [Terms of Service](https://auth314.com/tos) · [Privacy Policy](https://auth314.com/privacy)
 
 </div>
 
 ---
 
-Auth314 handles the Pi Network OAuth flow on an operator's behalf and
-delivers a single signal to a webhook: whether a user successfully verified
-their Pi account. It's built for bots, apps, and websites that want to check
-whether someone is a real Pi Pioneer without building and maintaining a Pi
-OAuth integration themselves. Auth314 is not affiliated with Pi Network or
-the Pi Core Team.
+Auth314 runs the Pi Network OAuth flow for you and delivers a single signal to
+a webhook: whether a user successfully verified their Pi account. It exists so
+you don't have to build and maintain a Pi OAuth integration yourself.
 
-Per Pi's Developer Terms of Use, a user's Pi identity (UID and username)
-stays internal to Auth314 and is never forwarded to operators or any third
-party. Operators only learn that a user verified, not who they are on Pi
-Network.
+This is the core service only. There is no hosted version, no dashboard, and
+no API key system. You deploy it to your own Cloudflare account and point your
+own bots or apps at it. Auth314 is not affiliated with Pi Network or the Pi
+Core Team.
+
+Per Pi's Developer Terms of Use, a user's Pi identity (UID and username) stays
+internal to this service and is never forwarded in the webhook payload.
 
 ## How it works
 
-1. An operator calls `POST /verify/init` with an API key, a `platform_user_id`
-   to verify, and a `callback_url` to receive the result. Auth314 returns a
-   `verify_url`.
+1. Your integration calls `POST /verify/init` with the shared `AUTH_SECRET`, a
+   `platform_user_id` to verify, and a `callback_url` to receive the result.
+   Auth314 returns a `verify_url`.
 2. The end user opens `verify_url` and completes the Pi Sign-in OAuth flow
    against Pi Network's own servers.
-3. Auth314 verifies the resulting access token against the Pi Platform API
-   and POSTs a one-time result to the operator's `callback_url`:
+3. Auth314 verifies the resulting access token against the Pi Platform API and
+   POSTs a one-time result to your `callback_url`:
    `{ platform_user_id, guild_id, verified: true }`.
 
 Each Pi account maps to exactly one verified platform identity at a time.
 Re-verifying with a different platform account automatically revokes the
 previous association.
 
-## Architecture
+## What you need to provide
 
+This repo contains the Worker API only. To run a complete flow you also need a
+web page of your own that:
+
+- reads the `session` query parameter from `verify_url`,
+- runs the Pi Sign-in flow with the Pi SDK,
+- POSTs the resulting `access_token` and `session` to `/auth/callback`.
+
+Set `PORTAL_BASE_URL` in `wrangler.toml` to that page's URL.
+
+## Endpoints
+
+| Endpoint | Auth | Description |
+|---|---|---|
+| `POST /verify/init` | `AUTH_SECRET` | Creates a session, returns a `verify_url` |
+| `GET /verify/status` | none | Checks whether a session is still valid |
+| `POST /auth/callback` | none | Completes verification and delivers the webhook |
+| `GET /health` | none | Health check |
+
+## Setup
+
+```bash
+cd worker && npm install
+
+# Create your KV namespace and paste the id into wrangler.toml
+npx wrangler kv:namespace create AUTH314_KV
+
+# Set secrets
+npx wrangler secret put PI_API_KEY
+npx wrangler secret put AUTH_SECRET
+
+npx wrangler deploy
 ```
-worker/   Cloudflare Worker: session and verification API, API key auth, KV storage
-portal/   Static page served at app.auth314.com where end users complete Pi sign-in
-web/      Marketing site served at auth314.com
-```
 
-## Hosted services
-
-- **Dashboard** — [dashboard.auth314.com](https://dashboard.auth314.com), manage API keys and view usage
-- **Discord** — [Add the Auth314 bot](https://discord.com/oauth2/authorize?client_id=1527761038999683242&permissions=268437504&integration_type=0&scope=bot+applications.commands), verify Pi Pioneers and auto-assign a role
-- **Telegram** — coming soon
+See [.env.example](./.env.example) for the full list of configuration values.
 
 ## License
 
-AGPL-3.0. See [LICENSE](./LICENSE). Commercial use outside the terms of the
-AGPL requires a separate agreement; see the
-[Terms of Service](https://auth314.com/tos).
+AGPL-3.0. See [LICENSE](./LICENSE).

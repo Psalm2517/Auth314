@@ -4,9 +4,10 @@ export interface Env {
 
   // Secrets / config (see .env.example)
   PI_API_KEY: string;
+  // Shared bearer token your own integrations authenticate with.
+  AUTH_SECRET: string;
+  // Base URL of your own verify UI, where users complete Pi sign-in.
   PORTAL_BASE_URL: string;
-  // Origin allowed to receive pi identity in dashboard-platform callbacks.
-  DASHBOARD_ORIGIN: string;
 }
 
 export type Platform = string;
@@ -18,8 +19,6 @@ export interface SessionRecord {
   callback_url: string;
   expires_at: string; // ISO 8601
   used: boolean;
-  key_id: string;
-  owner_id: string;
 }
 
 export interface IdentityRecord {

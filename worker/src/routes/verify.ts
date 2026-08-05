@@ -2,7 +2,7 @@ import type { Env } from "../types";
 import { error, json } from "../lib/http";
 import { createSession, isSessionExpired } from "../lib/session";
 import { getSession } from "../lib/kv";
-import { validateApiKey } from "../lib/apikey";
+import { isAuthorized } from "../lib/auth";
 
 interface VerifyInitBody {
   platform?: string;
@@ -29,22 +29,15 @@ function parseVerifyInitBody(body: VerifyInitBody): { platform: string; platform
 
 /**
  * POST /verify/init
- * Called by third-party platform integrations, authenticated with a
- * per-operator API key (rate limited, quota tracked, revocable).
+ * Called by your own integrations, authenticated with the shared AUTH_SECRET.
  */
 export async function handleVerifyInit(
   req: Request,
   env: Env,
 ): Promise<Response> {
-  const keyResult = await validateApiKey(env, req);
-  if (!keyResult.ok) {
-    if (keyResult.reason === "rate_limited") return error("Rate limit exceeded", 429);
-    if (keyResult.reason === "quota_exceeded") {
-      return error("Monthly verification quota exceeded. Contact hello@auth314.com for higher limits.", 429);
-    }
-    return error("Invalid or missing API key", 401);
+  if (!isAuthorized(env, req)) {
+    return error("Invalid or missing credentials", 401);
   }
-  const apiKey = keyResult.record;
 
   let body: VerifyInitBody;
   try {
@@ -56,11 +49,7 @@ export async function handleVerifyInit(
   const parsed = parseVerifyInitBody(body);
   if (parsed instanceof Response) return parsed;
 
-  const { token, record } = await createSession(env, {
-    ...parsed,
-    key_id: apiKey.id,
-    owner_id: apiKey.owner_id,
-  });
+  const { token, record } = await createSession(env, parsed);
 
   const verifyUrl = `${env.PORTAL_BASE_URL}/?session=${encodeURIComponent(token)}`;
 
@@ -73,7 +62,7 @@ export async function handleVerifyInit(
 
 /**
  * GET /verify/status?session=<token>
- * Read-only check the portal calls before starting the Pi sign-in flow, so
+ * Read-only check your verify UI calls before starting the Pi sign-in flow, so
  * an invalid/expired/used session is rejected up front instead of only
  * after the user completes the entire OAuth round-trip. Does not consume
  * the session -- only /auth/callback marks it used.

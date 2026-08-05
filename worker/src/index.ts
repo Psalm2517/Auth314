@@ -19,13 +19,6 @@ export default {
       return handleHealth();
     }
 
-    if ((pathname === "/discord-bot" || pathname === "/discord-bot/") && method === "GET") {
-      return Response.redirect(
-        "https://discord.com/oauth2/authorize?client_id=1527761038999683242&permissions=268437504&integration_type=0&scope=bot+applications.commands",
-        302,
-      );
-    }
-
     if (pathname === "/verify/init" && method === "POST") {
       return handleVerifyInit(request, env);
     }
