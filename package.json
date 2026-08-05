@@ -1,9 +1,10 @@
 {
-  "name": "auth314-worker",
-  "version": "1.0.0",
-  "description": "Auth314 core service — Pi Sign-in OAuth bridge Cloudflare Worker",
+  "name": "auth314",
+  "version": "2.0.0",
+  "description": "A small self-hosted service that makes Pi Sign-in easy",
   "private": true,
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
+  "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",

@@ -27,3 +27,10 @@ export function error(message: string, status = 400): Response {
 export function preflight(): Response {
   return new Response(null, { status: 204, headers: withCors() });
 }
+
+export function html(body: string, status = 200): Response {
+  return new Response(body, {
+    status,
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
+}

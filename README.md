@@ -9,75 +9,135 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](./LICENSE)
 [![CI](https://github.com/Psalm2517/auth314/actions/workflows/ci.yml/badge.svg)](https://github.com/Psalm2517/auth314/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-f38020.svg?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 
 </div>
 
 ---
 
-Auth314 runs the Pi Network OAuth flow for you and delivers a single signal to
-a webhook: whether a user successfully verified their Pi account. It exists so
-you don't have to build and maintain a Pi OAuth integration yourself.
+Pi Sign-in is an implicit-flow OAuth integration: you have to redirect the
+user, catch an access token out of a URL fragment in the browser, and verify
+it against Pi's API before you can trust it. Auth314 does all of that for you.
 
-This is the core service only. There is no hosted version, no dashboard, and
-no API key system. You deploy it to your own Cloudflare account and point your
-own bots or apps at it. Auth314 is not affiliated with Pi Network or the Pi
-Core Team.
+You make one API call, send the user a link, and get a webhook back telling
+you they verified. Auth314 is not affiliated with Pi Network or the Pi Core
+Team.
 
-Per Pi's Developer Terms of Use, a user's Pi identity (UID and username) stays
-internal to this service and is never forwarded in the webhook payload.
+Runs on **Cloudflare Workers** or **Vercel**.
 
 ## How it works
 
-1. Your integration calls `POST /verify/init` with the shared `AUTH_SECRET`, a
-   `platform_user_id` to verify, and a `callback_url` to receive the result.
-   Auth314 returns a `verify_url`.
-2. The end user opens `verify_url` and completes the Pi Sign-in OAuth flow
-   against Pi Network's own servers.
-3. Auth314 verifies the resulting access token against the Pi Platform API and
-   POSTs a one-time result to your `callback_url`:
-   `{ platform_user_id, guild_id, verified: true }`.
+```
+POST /verify/init  ──▶  { verify_url }
+                             │
+        send verify_url to your user
+                             │
+                             ▼
+     Auth314 redirects them to Pi Sign-in, handles the
+     OAuth round trip, and verifies the token with Pi
+                             │
+                             ▼
+        POST to your callback_url: { ref, verified: true }
+```
 
-Each Pi account maps to exactly one verified platform identity at a time.
-Re-verifying with a different platform account automatically revokes the
-previous association.
+Everything the user sees is served by Auth314. There is no page for you to
+build.
 
-## What you need to provide
+## Usage
 
-This repo contains the Worker API only. To run a complete flow you also need a
-web page of your own that:
+Ask for a verification link, passing any `ref` you want echoed back (a user
+id, a row id, anything):
 
-- reads the `session` query parameter from `verify_url`,
-- runs the Pi Sign-in flow with the Pi SDK,
-- POSTs the resulting `access_token` and `session` to `/auth/callback`.
+```bash
+curl -X POST https://your-deployment/verify/init \
+  -H "Authorization: Bearer $AUTH_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{ "ref": "discord:1154371492537188465",
+        "callback_url": "https://your-app.example/webhook" }'
+```
 
-Set `PORTAL_BASE_URL` in `wrangler.toml` to that page's URL.
+```json
+{
+  "verify_url": "https://your-deployment/verify?session=Xk3…",
+  "session": "Xk3…",
+  "expires_at": "2026-08-05T12:34:56.000Z"
+}
+```
+
+Send the user `verify_url`. When they finish, Auth314 POSTs to your
+`callback_url`:
+
+```json
+{ "ref": "discord:1154371492537188465", "verified": true }
+```
+
+Links are one-time use and expire after 10 minutes.
+
+Pi identity (UID and username) never leaves Auth314 and is deliberately not
+included in the webhook, per Pi's Developer Terms of Use.
 
 ## Endpoints
 
 | Endpoint | Auth | Description |
 |---|---|---|
 | `POST /verify/init` | `AUTH_SECRET` | Creates a session, returns a `verify_url` |
-| `GET /verify/status` | none | Checks whether a session is still valid |
-| `POST /auth/callback` | none | Completes verification and delivers the webhook |
-| `GET /health` | none | Health check |
+| `GET /verify` | — | Where the user lands; redirects to Pi Sign-in |
+| `GET /callback` | — | OAuth redirect target; completes the flow |
+| `GET /verify/status` | — | Checks whether a session is still valid |
+| `POST /auth/callback` | — | Called by the callback page; fires your webhook |
+| `GET /health` | — | Health check |
 
 ## Setup
 
+You'll need a Pi app registered in the [Pi Developer
+Portal](https://minepi.com/developers/) to get a `client_id`.
+
+### Cloudflare Workers
+
 ```bash
-cd worker && npm install
-
-# Create your KV namespace and paste the id into wrangler.toml
-npx wrangler kv:namespace create AUTH314_KV
-
-# Set secrets
-npx wrangler secret put PI_API_KEY
+npm install
+npx wrangler kv namespace create AUTH314_KV   # paste the id into wrangler.toml
+# set PI_CLIENT_ID in wrangler.toml
 npx wrangler secret put AUTH_SECRET
-
 npx wrangler deploy
 ```
 
-See [.env.example](./.env.example) for the full list of configuration values.
+### Vercel
+
+Create an [Upstash Redis](https://upstash.com) database (or Vercel KV) and
+link it to the project, then:
+
+```bash
+npm install -g vercel
+vercel env add AUTH_SECRET
+vercel env add PI_CLIENT_ID
+vercel deploy
+```
+
+`KV_REST_API_URL` / `KV_REST_API_TOKEN` are set for you when you link the
+store. `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` also work.
+
+### Finally
+
+Register `https://your-deployment/callback` as a redirect URI on your Pi app.
+It must match exactly.
+
+## Configuration
+
+| Name | Required | Description |
+|---|---|---|
+| `AUTH_SECRET` | yes | Bearer token your integration sends to `/verify/init` |
+| `PI_CLIENT_ID` | yes | Pi OAuth client id (public) |
+| `PUBLIC_URL` | no | Override the public base URL, if behind a proxy |
+
+## Layout
+
+```
+src/core/       platform-agnostic request handling
+src/adapters/   thin per-platform entry points (cloudflare, vercel)
+```
+
+Adding a platform means implementing a three-method `SessionStore` and
+passing a `Config` to `handleRequest`.
 
 ## License
 

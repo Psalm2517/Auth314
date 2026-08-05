@@ -2,11 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   createSession,
   generateToken,
+  getSession,
   isSessionExpired,
-} from "../src/lib/session";
-import { getSession } from "../src/lib/kv";
-import type { SessionRecord } from "../src/types";
-import { makeEnv } from "./helpers";
+} from "../src/core/lib/session";
+import type { SessionRecord } from "../src/core/types";
+import { makeConfig } from "./helpers";
 
 describe("generateToken", () => {
   it("produces URL-safe tokens with no padding", () => {
@@ -27,51 +27,41 @@ describe("generateToken", () => {
 
 describe("isSessionExpired", () => {
   const base: Omit<SessionRecord, "expires_at"> = {
-    platform: "discord",
-    platform_user_id: "1",
-    guild_id: "g",
+    ref: "r",
     callback_url: "https://cb.example",
     used: false,
   };
 
   it("returns false for a future expiry", () => {
-    const rec: SessionRecord = {
-      ...base,
-      expires_at: new Date(Date.now() + 60_000).toISOString(),
-    };
-    expect(isSessionExpired(rec)).toBe(false);
+    expect(
+      isSessionExpired({ ...base, expires_at: new Date(Date.now() + 60_000).toISOString() }),
+    ).toBe(false);
   });
 
   it("returns true for a past expiry", () => {
-    const rec: SessionRecord = {
-      ...base,
-      expires_at: new Date(Date.now() - 1_000).toISOString(),
-    };
-    expect(isSessionExpired(rec)).toBe(true);
+    expect(
+      isSessionExpired({ ...base, expires_at: new Date(Date.now() - 1_000).toISOString() }),
+    ).toBe(true);
   });
 });
 
 describe("createSession", () => {
   it("persists a fresh, unused session with a ~10 minute TTL", async () => {
-    const env = makeEnv();
+    const config = makeConfig();
     const before = Date.now();
-    const { token, record } = await createSession(env, {
-      platform: "telegram",
-      platform_user_id: "42",
-      guild_id: "chat-1",
+    const { token, record } = await createSession(config, {
+      ref: "user-42",
       callback_url: "https://cb.example/verified",
     });
 
     expect(token).toMatch(/^[A-Za-z0-9_-]+$/);
     expect(record.used).toBe(false);
-    expect(record.platform).toBe("telegram");
+    expect(record.ref).toBe("user-42");
 
     const expiresMs = new Date(record.expires_at).getTime();
-    // Within 10 min (+ small slack) of creation.
     expect(expiresMs).toBeGreaterThanOrEqual(before + 10 * 60 * 1000 - 1000);
     expect(expiresMs).toBeLessThanOrEqual(Date.now() + 10 * 60 * 1000 + 1000);
 
-    const stored = await getSession(env, token);
-    expect(stored).toEqual(record);
+    expect(await getSession(config, token)).toEqual(record);
   });
 });

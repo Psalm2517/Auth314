@@ -1,27 +1,23 @@
-# Cloudflare Worker configuration for the Auth314 core service.
-# This is the verification API only -- there is no bundled UI. Self-hosters
-# must build or point to their own page for the user-facing Pi sign-in step
-# (see PORTAL_BASE_URL below) and set every value in this file for their own
-# Cloudflare account before deploying.
+# Cloudflare Workers deployment. See src/adapters/vercel for Vercel.
 name = "auth314"
-main = "worker/src/index.ts"
+main = "src/adapters/cloudflare/index.ts"
 compatibility_date = "2024-06-01"
 
 # --- KV namespace binding ---
 # Create your own namespace first:
-#   wrangler kv:namespace create AUTH314_KV
-# then paste the returned id below (and a preview id for `wrangler dev`).
+#   npx wrangler kv namespace create AUTH314_KV
+# then paste the returned id below.
 [[kv_namespaces]]
 binding = "AUTH314_KV"
 id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 
-# --- Non-secret config variables ---
 [vars]
-# The URL of your own verify/callback UI (not included in this repo).
-# /verify/init builds verify_url from this.
-PORTAL_BASE_URL = "https://verify.example.com"
+# Your Pi OAuth client id, from the Pi Developer Portal. Public value.
+PI_CLIENT_ID = "REPLACE_WITH_YOUR_PI_CLIENT_ID"
+# Optional. Only set this if the public URL differs from the request Host
+# (e.g. behind a proxy). Otherwise the request origin is used.
+# PUBLIC_URL = "https://auth.example.com"
 
 # --- Secrets (do NOT put these here) ---
 # Set with:
-#   wrangler secret put PI_API_KEY
-#   wrangler secret put AUTH_SECRET
+#   npx wrangler secret put AUTH_SECRET
