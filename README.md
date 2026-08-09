@@ -4,7 +4,9 @@
 
 # Auth314
 
-**Self-hosted Pi Sign-in, handled end to end.**
+**Pi Sign-in, handled end to end.**
+
+Self-hosted on Cloudflare Workers.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![CI](https://github.com/Psalm2517/Auth314/actions/workflows/ci.yml/badge.svg)](https://github.com/Psalm2517/Auth314/actions/workflows/ci.yml)
