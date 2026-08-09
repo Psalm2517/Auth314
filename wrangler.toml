@@ -1,4 +1,4 @@
-# Cloudflare Workers deployment. See src/adapters/vercel for Vercel.
+# Cloudflare Workers deployment.
 name = "auth314"
 main = "src/adapters/cloudflare/index.ts"
 compatibility_date = "2024-06-01"

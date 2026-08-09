@@ -31,11 +31,20 @@ export function callbackPage(apiBase: string): string {
     root.innerHTML = '<div class="mark ' + cls + '">' + mark + "</div><h1>" +
       title + "</h1><p>" + msg + "</p>";
   }
+  // Pi returns exactly these four error codes in the fragment.
+  var ERRORS = {
+    access_denied: ["Sign-in declined", "You declined the consent screen."],
+    expired: ["Sign-in expired", "The sign-in request timed out. Please start over."],
+    cancelled: ["Sign-in cancelled", "You cancelled before approving."],
+    server_error: ["Pi had a problem", "Pi reported an unexpected error. Please try again."]
+  };
   var hash = new URLSearchParams(location.hash.replace(/^#/, ""));
   var token = hash.get("access_token");
   var state = hash.get("state");
-  if (hash.get("error")) {
-    return show("bad", "\\u2715", "Sign-in cancelled", hash.get("error_description") || hash.get("error"));
+  var err = hash.get("error");
+  if (err) {
+    var known = ERRORS[err];
+    return show("bad", "\\u2715", known ? known[0] : "Sign-in failed", known ? known[1] : err);
   }
   if (!token || !state) {
     return show("bad", "\\u2715", "Something went wrong", "This link is missing sign-in data. Please start over.");

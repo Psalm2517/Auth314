@@ -4,7 +4,6 @@ import { publicOrigin } from "../lib/auth";
 import { callbackPage } from "../lib/pages";
 import { fetchPiMe, PiApiError } from "../lib/pi";
 import { getSession, markSessionUsed, isSessionExpired } from "../lib/session";
-import { logVerification } from "../lib/verlog";
 
 /**
  * GET /callback
@@ -55,21 +54,27 @@ export async function handleAuthCallback(req: Request, config: Config): Promise<
     return error(`Pi verification failed: ${(err as Error).message}`, status);
   }
 
-  // Log before delivery -- the Pi sign-in is already complete at this point,
-  // so an unreachable webhook must not erase that fact.
-  logVerification(config, {
-    timestamp: new Date().toISOString(),
-    ref: record.ref,
-  }).catch(() => {});
-
-  // Deliver the webhook. Pi identity (uid, username) is deliberately not
-  // included, per Pi's Developer Terms of Use -- only a verified signal and
-  // the caller's own opaque ref.
+  // Deliver the webhook.
+  //
+  // Auth314 runs inside your own deployment, so this is an internal hop: you
+  // own the Pi app that minted this uid, and you run both this worker and the
+  // callback_url it posts to. Pi's Sign-in guide tells you to "use this `uid`
+  // as the primary key for the user's account in your system", which requires
+  // that you actually receive it.
+  //
+  // Pi's Developer Terms of Use §4 does restrict transferring uids/usernames
+  // to outside parties -- if your callback_url relays this onward, that's a
+  // §4 transfer and your obligation to handle.
   try {
     const res = await fetch(record.callback_url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ref: record.ref, verified: true }),
+      body: JSON.stringify({
+        ref: record.ref,
+        verified: true,
+        uid: me.uid,
+        username: me.username,
+      }),
     });
     if (!res.ok) {
       return error(`Callback delivery failed with status ${res.status}`, 502);
@@ -78,5 +83,5 @@ export async function handleAuthCallback(req: Request, config: Config): Promise<
     return error(`Callback delivery failed: ${(err as Error).message}`, 502);
   }
 
-  return json({ status: "verified", username: me.username });
+  return json({ status: "verified" });
 }

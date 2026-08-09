@@ -5,4 +5,4 @@ node_modules/
 dist/
 *.log
 *.tsbuildinfo
-.DS_Store.vercel/
+.DS_Store

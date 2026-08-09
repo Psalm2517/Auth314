@@ -85,7 +85,7 @@ describe("POST /auth/callback", () => {
       config,
     );
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ status: "verified", username: "pioneer" });
+    expect(await res.json()).toEqual({ status: "verified" });
 
     expect((await getSession(config, token))?.used).toBe(true);
 
@@ -94,13 +94,33 @@ describe("POST /auth/callback", () => {
     expect((meCall?.[1] as RequestInit).headers).toMatchObject({
       Authorization: "Bearer user-token",
     });
+  });
 
-    // Webhook carries the ref and a verified flag -- no Pi identity.
+  it("delivers the ref and the app-scoped Pi identity to the webhook", async () => {
+    const config = makeConfig();
+    const token = await seedSession(config);
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+
+    await handleAuthCallback(post({ access_token: "tok", session: token }), config);
+
     const cbCall = fetchMock.mock.calls.find((c) => String(c[0]).includes("cb.example"));
     expect(JSON.parse((cbCall?.[1] as RequestInit).body as string)).toEqual({
       ref: "user-1",
       verified: true,
+      uid: "pi-uid-1",
+      username: "pioneer",
     });
+  });
+
+  it("keeps the Pi access token out of the webhook", async () => {
+    const config = makeConfig();
+    const token = await seedSession(config);
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+
+    await handleAuthCallback(post({ access_token: "super-secret", session: token }), config);
+
+    const cbCall = fetchMock.mock.calls.find((c) => String(c[0]).includes("cb.example"));
+    expect((cbCall?.[1] as RequestInit).body as string).not.toContain("super-secret");
   });
 
   it("rejects an already-used session", async () => {

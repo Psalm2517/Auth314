@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  handleVerifyInit,
-  handleVerifyRedirect,
-  handleVerifyStatus,
-} from "../src/core/routes/verify";
+import { handleVerifyInit, handleVerifyRedirect } from "../src/core/routes/verify";
 import { createSession, getSession, putSession } from "../src/core/lib/session";
 import { makeConfig, TEST_AUTH_SECRET, TEST_CLIENT_ID } from "./helpers";
 
@@ -166,27 +162,5 @@ describe("GET /verify", () => {
       expires_at: new Date(Date.now() - 1000).toISOString(),
     });
     expect((await handleVerifyRedirect(getReq(token), config)).status).toBe(410);
-  });
-});
-
-describe("GET /verify/status", () => {
-  it("requires a session param", async () => {
-    expect((await handleVerifyStatus(getReq(null, "/verify/status"), makeConfig())).status).toBe(400);
-  });
-
-  it("404s for an unknown session", async () => {
-    expect((await handleVerifyStatus(getReq("nope", "/verify/status"), makeConfig())).status).toBe(404);
-  });
-
-  it("returns valid: true for a fresh session and does not consume it", async () => {
-    const config = makeConfig();
-    const { token } = await createSession(config, {
-      ref: "r",
-      callback_url: "https://cb.example",
-    });
-    const res = await handleVerifyStatus(getReq(token, "/verify/status"), config);
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ valid: true });
-    expect((await getSession(config, token))?.used).toBe(false);
   });
 });

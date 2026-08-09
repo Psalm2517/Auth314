@@ -1,6 +1,6 @@
 import type { Config } from "./types";
 import { error, json, preflight } from "./lib/http";
-import { handleVerifyInit, handleVerifyRedirect, handleVerifyStatus } from "./routes/verify";
+import { handleVerifyInit, handleVerifyRedirect } from "./routes/verify";
 import { handleCallbackPage, handleAuthCallback } from "./routes/callback";
 
 /**
@@ -21,9 +21,6 @@ export async function handleRequest(req: Request, config: Config): Promise<Respo
   }
   if (pathname === "/verify" && method === "GET") {
     return handleVerifyRedirect(req, config);
-  }
-  if (pathname === "/verify/status" && method === "GET") {
-    return handleVerifyStatus(req, config);
   }
   if (pathname === "/callback" && method === "GET") {
     return handleCallbackPage(req, config);

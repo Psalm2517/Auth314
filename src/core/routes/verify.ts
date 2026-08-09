@@ -75,19 +75,3 @@ export async function handleVerifyRedirect(req: Request, config: Config): Promis
   const redirectUri = `${publicOrigin(config, req)}/callback`;
   return Response.redirect(buildAuthorizeUrl(config, redirectUri, session), 302);
 }
-
-/**
- * GET /verify/status?session=<token>
- * Read-only validity check. Does not consume the session.
- */
-export async function handleVerifyStatus(req: Request, config: Config): Promise<Response> {
-  const session = new URL(req.url).searchParams.get("session");
-  if (!session) return error("session is required", 400);
-
-  const record = await getSession(config, session);
-  if (!record) return error("Session not found or expired", 404);
-  if (record.used) return error("Session already used", 409);
-  if (isSessionExpired(record)) return error("Session expired", 410);
-
-  return json({ valid: true });
-}
