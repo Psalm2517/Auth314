@@ -15,6 +15,10 @@ credentials.
 | `POST /auth/callback` | none | the `/callback` page |
 | `GET /health` | none | anything |
 
+In practice you only ever call two of these yourself: `/verify/init` to start,
+and `/verify/exchange` to finish if you're using the web flow. The rest run on
+their own.
+
 ---
 
 ## `POST /verify/init`
@@ -31,14 +35,23 @@ Creates a verification session and returns the link to send the user to.
 }
 ```
 
-| Field | Required | Notes |
-|---|---|---|
-| `ref` | no | Opaque string handed back to you on completion. Defaults to `""`. |
-| `redirect_uri` | see below | Where to send the browser afterwards, with a one-time `code`. |
-| `callback_url` | see below | Webhook to POST the result to. |
+**Required:** at least one of `redirect_uri` or `callback_url`. Nothing else.
 
-At least one of `redirect_uri` and `callback_url` is required; setting both is
-allowed. Both must be https, except on `localhost`, `127.0.0.1`, or `[::1]`.
+| Field | | Notes |
+|---|---|---|
+| `redirect_uri` | one of these two | Where to send the browser afterwards, with a one-time `code`. Use this for web apps. |
+| `callback_url` | one of these two | Webhook to POST the result to. Use this for bots. |
+| `ref` | optional | Opaque string handed back to you on completion. Defaults to `""`. |
+
+Setting both targets is allowed and does both. Whichever you use must be
+https, except on `localhost`, `127.0.0.1`, or `[::1]`, where http is accepted
+so local development works.
+
+The smallest valid request is therefore:
+
+```json
+{ "redirect_uri": "https://yourapp.com/signin/done" }
+```
 
 **Response** `200`
 

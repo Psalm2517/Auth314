@@ -100,14 +100,23 @@ const { verify_url } = await auth314("/verify/init", {
 
 ## Setup
 
-Four steps. The deploy button replaces step 2 only; the rest you do either
-way, because they involve your Pi app and your secrets.
+### What you actually need
+
+Two accounts and two values. That's the whole list.
+
+| | |
+|---|---|
+| A Cloudflare account | free tier is fine |
+| A Pi app with Pi Sign-in enabled | gives you `PI_CLIENT_ID` |
+| `AUTH_SECRET` | any random string; `npm run setup` generates one |
+
+There is no database to run, no Pi client secret (Pi doesn't issue one), and
+nothing in this repo you have to hand-edit.
 
 ### 1. Register a Pi app
 
 In the [Pi Developer Portal](https://minepi.com/developers/): verify your
-domain, enable Pi Sign-in, and copy the `client_id` it issues. There is no
-client secret.
+domain, enable Pi Sign-in, and copy the `client_id`.
 
 Leave the redirect URI for step 4, since you don't know your Worker's URL yet.
 
@@ -130,13 +139,17 @@ Either way, the KV namespace is created for you on first deploy.
 ### 3. Set your config
 
 ```bash
-# Your client_id from step 1 goes in wrangler.toml under [vars]
-npx wrangler secret put AUTH_SECRET   # openssl rand -base64 32
-npx wrangler deploy                   # redeploy to pick up the client_id
+npm run setup
 ```
 
-If you used the button, set both from the Cloudflare dashboard instead, under
-your Worker's Settings then Variables.
+Prompts for the two required values, generates `AUTH_SECRET` if you don't have
+one, writes `.dev.vars` for local development, and offers to push both to
+Cloudflare. Re-run it any time to rotate.
+
+If you deployed with the button, set the same two names under your Worker's
+Settings then Variables in the Cloudflare dashboard.
+
+Until both are set, every request returns a `500` naming what's missing.
 
 ### 4. Register the redirect URI
 
@@ -145,11 +158,22 @@ redirect URI. It must match exactly.
 
 ## Configuration
 
-| Name | Where | Required | Description |
-|---|---|---|---|
-| `AUTH_SECRET` | secret | yes | Bearer token your server sends to `/verify/init` and `/verify/exchange` |
-| `PI_CLIENT_ID` | `[vars]` | yes | Pi OAuth client id (public; Pi issues no secret) |
-| `PUBLIC_URL` | `[vars]` | no | Override the public base URL, if behind a proxy |
+Both required values are set as Cloudflare secrets, so `wrangler.toml` never
+needs editing. Locally they come from `.dev.vars`
+(see [.dev.vars.example](./.dev.vars.example)).
+
+**Required**
+
+| Name | Description |
+|---|---|
+| `PI_CLIENT_ID` | Pi OAuth client id. Public value; Pi issues no secret. |
+| `AUTH_SECRET` | Bearer token your server sends to `/verify/init` and `/verify/exchange`. |
+
+**Optional**
+
+| Name | Default | Description |
+|---|---|---|
+| `PUBLIC_URL` | the request's own origin | Set only if you're behind a proxy that rewrites `Host`. |
 
 ## What you get back
 

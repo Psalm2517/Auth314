@@ -1,0 +1,21 @@
+# Copy to .dev.vars for local development, or run `npm run setup` to generate
+# it. .dev.vars is gitignored and read automatically by `wrangler dev`.
+#
+# For production, the same names are set as Cloudflare secrets. `npm run setup`
+# can push them for you, or use `npx wrangler secret put <NAME>`.
+
+# --- Required ---
+
+# Pi OAuth client id. Pi Developer Portal > your app > Pi Sign-in.
+# Public value; Pi does not issue a client secret.
+PI_CLIENT_ID=
+
+# Bearer token your own server sends to /verify/init and /verify/exchange.
+# Generate one with: openssl rand -base64 32
+AUTH_SECRET=
+
+# --- Optional ---
+
+# Only needed if the public URL differs from the request Host, e.g. behind a
+# proxy. Otherwise Auth314 uses the origin of the incoming request.
+# PUBLIC_URL=https://auth.example.com

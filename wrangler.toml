@@ -1,20 +1,12 @@
 # Cloudflare Workers deployment.
+#
+# You should not need to edit this file. Configuration is set as secrets, via
+# `npm run setup` or the Cloudflare dashboard. See .dev.vars.example.
 name = "auth314"
 main = "src/worker.ts"
 compatibility_date = "2024-06-01"
 
-# Wrangler creates this namespace for you on first deploy and writes the id
-# back here. To bind an existing one instead, add: id = "<your namespace id>"
+# Wrangler creates this namespace on first deploy and writes the id back here.
+# To bind an existing one instead, add: id = "<your namespace id>"
 [[kv_namespaces]]
 binding = "AUTH314_KV"
-
-[vars]
-# Your Pi OAuth client id, from the Pi Developer Portal. Public value.
-PI_CLIENT_ID = "REPLACE_WITH_YOUR_PI_CLIENT_ID"
-# Optional. Only set this if the public URL differs from the request Host
-# (e.g. behind a proxy). Otherwise the request origin is used.
-# PUBLIC_URL = "https://auth.example.com"
-
-# --- Secrets (do NOT put these here) ---
-# Set with:
-#   npx wrangler secret put AUTH_SECRET
