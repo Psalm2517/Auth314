@@ -20,8 +20,8 @@
 
 You deploy Auth314 to your own Cloudflare account. Your app hands it a user,
 Auth314 runs the entire Pi Sign-in round trip, and you get back a verified Pi
-identity. Everything in between — the redirect out, the browser page that
-catches the token, CSRF, error states, expiry — is already written.
+identity. Everything in between is already written: the redirect out, the
+browser page that catches the token, CSRF, error states, expiry.
 
 There is no hosted version and no account to sign up for. This is the whole
 project.
@@ -51,13 +51,13 @@ so, per Pi's guide:
 > to your server by the browser."
 
 Auth314 hosts that page and converts the whole thing into a code exchange your
-server can do. You write no front-end JavaScript at all — which also means a
+server can do. You write no front-end JavaScript at all, which also means a
 bot, a CLI, or any backend without a web front-end can use Pi Sign-in without
 standing up a page purely to catch a fragment.
 
 **CSRF is left to you.** Pi's guide says "Always verify `state` before trusting
 the response" and leaves you storing a random value in `sessionStorage`.
-Auth314 makes `state` the verification session itself — a 192-bit token that
+Auth314 makes `state` the verification session itself: a 192-bit token that
 only exists server-side, is single-use, and expires in ten minutes. A forged
 `state` isn't "mismatched", it's simply not a session.
 
@@ -132,7 +132,7 @@ Pi app. It must match exactly.
 ## What you get back
 
 The verified `uid` and `username`. Auth314 runs inside your own stack, so this
-is an internal hop — you registered the Pi app that minted the `uid`, and you
+is an internal hop. You registered the Pi app that minted the `uid`, and you
 run both this worker and whatever receives the result.
 
 Pi's Sign-in guide tells you to "use this `uid` as the primary key for the

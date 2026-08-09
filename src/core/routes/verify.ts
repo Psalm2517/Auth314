@@ -60,7 +60,7 @@ export async function handleVerifyInit(req: Request, config: Config): Promise<Re
 
 /**
  * GET /verify?session=<token>
- * Where the end user lands. Redirects straight to Pi Sign-in -- the session
+ * Where the end user lands. Redirects straight to Pi Sign-in. The session
  * token doubles as the OAuth `state` parameter, so it survives the round trip
  * and guards against CSRF.
  */

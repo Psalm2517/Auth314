@@ -18,7 +18,7 @@ function page(body: string): string {
 
 /**
  * Served at the OAuth redirect_uri. Pi returns the access token in the URL
- * fragment, which browsers never send to the server -- so this page reads it
+ * fragment, which browsers never send to the server, so this page reads it
  * client-side and POSTs it back to /auth/callback.
  */
 export function callbackPage(apiBase: string): string {

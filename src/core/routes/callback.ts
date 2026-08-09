@@ -44,7 +44,7 @@ export async function handleAuthCallback(req: Request, config: Config): Promise<
   if (record.used) return error("Session already used", 409);
   if (isSessionExpired(record)) return error("Session expired", 410);
 
-  // Consume it immediately -- one-time use guard.
+  // Consume it immediately. One-time use guard.
   await markSessionUsed(config, session, record);
 
   // Verify the access token against the Pi API.
@@ -63,7 +63,7 @@ export async function handleAuthCallback(req: Request, config: Config): Promise<
   // system", which needs you to actually receive it.
   //
   // Pi's Developer Terms of Use §4 does restrict transferring uids/usernames
-  // to outside parties -- if you relay this onward, that's a §4 transfer and
+  // to outside parties. If you relay this onward, that's a §4 transfer and
   // your obligation to handle.
   if (record.callback_url) {
     try {

@@ -17,7 +17,7 @@ export class PiApiError extends Error {
  * Build the Pi Sign-in authorize URL.
  *
  * Pi only supports the implicit flow (response_type=token), so the access
- * token comes back in the URL fragment -- see lib/pages.ts for the callback
+ * token comes back in the URL fragment. See lib/pages.ts for the callback
  * page that reads it. There is no code exchange and no client secret.
  *
  * `redirectUri` must exactly match one of the redirect URIs registered for

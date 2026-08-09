@@ -6,7 +6,7 @@ need a logged-in user at the end of it.
 Pi Sign-in only offers the OAuth **implicit** flow: the access token arrives in
 a URL fragment, which the browser never sends to a server, so Pi's own guide
 tells you to read it in front-end JavaScript. Auth314 turns that into the
-**authorization-code** shape you already know — the browser comes back to your
+**authorization-code** shape you already know: the browser comes back to your
 site with a `code`, and your server trades it for the identity.
 
 Your front-end writes nothing.
@@ -33,7 +33,7 @@ Your front-end writes nothing.
 ## 1. Start the sign-in
 
 When the user clicks your button, ask Auth314 for a link. Do this **on your
-server** — `AUTH_SECRET` must never reach the browser.
+server**, because `AUTH_SECRET` must never reach the browser.
 
 Set `ref` to a random per-attempt value that you also store in the visitor's
 session. When the code comes back, you'll compare them. That's your CSRF
@@ -108,7 +108,7 @@ landing. A replayed code returns `404`.
 sits on the Pi consent screen too long, they'll need to start over.
 
 **Local development.** `redirect_uri` must be https, except on `localhost`,
-`127.0.0.1`, or `[::1]`, where http is allowed — the same rule Pi applies in
+`127.0.0.1`, or `[::1]`, where http is allowed. This is the same rule Pi uses in
 the Developer Portal.
 
 **Auth314's own callback stays registered with Pi, not yours.** The redirect

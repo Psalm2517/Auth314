@@ -95,7 +95,7 @@ describe("redirect flow", () => {
     expect(url.origin + url.pathname).toBe("https://app.example/signin/done");
     expect(url.searchParams.get("code")).toMatch(/^[A-Za-z0-9_-]+$/);
 
-    // Only Pi was called -- there is no callback_url on this session.
+    // Only Pi was called, since there is no callback_url on this session.
     expect(fetchMock.mock.calls.every((c) => String(c[0]).includes("minepi.com"))).toBe(true);
   });
 

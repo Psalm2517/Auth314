@@ -1,6 +1,6 @@
 # Verifying users from a bot
 
-Use this flow when there's no browser to return to — a Discord or Telegram
+Use this flow when there's no browser to return to: a Discord or Telegram
 bot, a CLI, a background job. Instead of redirecting the user back, Auth314
 POSTs the result to a webhook you host.
 
@@ -41,7 +41,7 @@ const r = await fetch("https://auth.example.com/verify/init", {
 });
 
 const { verify_url } = await r.json();
-// Send verify_url to the user -- ephemerally, if your platform supports it.
+// Send verify_url to the user, ephemerally if your platform supports it.
 ```
 
 ## 2. Receive the webhook
@@ -75,7 +75,7 @@ runs on.
 - Key `ref` on `guild_id` **and** `user_id` if roles are per-server.
 - Store `uid` if you want to detect one Pi account claiming several Discord
   accounts. Because Pi scopes `uid` per app, this only works within your own
-  app — you cannot correlate against anyone else's.
+  app. You cannot correlate against anyone else's.
 - Assigning a role needs `Manage Roles`, and the bot's own role must sit
   **above** the role it's granting in the server's role list. Discord returns
   `403 Missing Access` when it doesn't.
@@ -89,5 +89,5 @@ demand rather than caching one.
 `[::1]` for local development.
 
 **You can set both `callback_url` and `redirect_uri`.** The webhook fires and
-the browser still gets sent somewhere — useful if you want the user to land on
+the browser still gets sent somewhere. Useful if you want the user to land on
 a real "you're verified" page instead of Auth314's default one.

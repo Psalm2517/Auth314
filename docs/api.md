@@ -10,10 +10,10 @@ credentials.
 |---|---|---|
 | `POST /verify/init` | `AUTH_SECRET` | your server |
 | `POST /verify/exchange` | `AUTH_SECRET` | your server |
-| `GET /verify` | — | the user's browser |
-| `GET /callback` | — | the user's browser, via Pi |
-| `POST /auth/callback` | — | the `/callback` page |
-| `GET /health` | — | anything |
+| `GET /verify` | none | the user's browser |
+| `GET /callback` | none | the user's browser, via Pi |
+| `POST /auth/callback` | none | the `/callback` page |
+| `GET /health` | none | anything |
 
 ---
 
@@ -50,7 +50,7 @@ allowed. Both must be https, except on `localhost`, `127.0.0.1`, or `[::1]`.
 }
 ```
 
-**Errors** — `400` bad body or targets, `401` bad credentials.
+**Errors**: `400` bad body or targets, `401` bad credentials.
 
 ---
 
@@ -75,7 +75,7 @@ identity. Codes are single-use and live for two minutes.
 }
 ```
 
-**Errors** — `400` missing code, `401` bad credentials, `404` unknown,
+**Errors**: `400` missing code, `401` bad credentials, `404` unknown,
 already-spent, or expired code.
 
 ---
@@ -93,8 +93,8 @@ Renders an HTML error page on `400` (no session), `404` (unknown), `409`
 ## `GET /callback`
 
 The redirect URI you register in the Pi Developer Portal. Serves a small page
-that reads the access token out of the URL fragment — which the browser never
-sends to a server — and posts it to `/auth/callback`.
+that reads the access token out of the URL fragment, which the browser never
+sends to a server, and posts it to `/auth/callback`.
 
 Handles Pi's four documented failure codes: `access_denied`, `expired`,
 `cancelled`, `server_error`.
@@ -115,7 +115,7 @@ there is a `redirect_uri`.
 
 `redirect_url` is present only when the session had a `redirect_uri`.
 
-**Errors** — `404` / `409` / `410` for session problems, `401` if Pi rejects
+**Errors**: `404` / `409` / `410` for session problems, `401` if Pi rejects
 the token, `502` if Pi is unreachable or your webhook returns non-2xx.
 
 ---
@@ -135,5 +135,5 @@ What Auth314 POSTs to your `callback_url`:
 
 Return a 2xx. Anything else is treated as a delivery failure.
 
-The Pi access token is never included — it stays inside Auth314 and is used
+The Pi access token is never included. It stays inside Auth314 and is used
 only to call `/v2/me`.
