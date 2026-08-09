@@ -1,11 +1,11 @@
 import type { Config } from "./types";
 import { error, json, preflight } from "./lib/http";
-import { handleVerifyInit, handleVerifyRedirect } from "./routes/verify";
+import { handleVerifyInit, handleVerifyRedirect, handleExchange } from "./routes/verify";
 import { handleCallbackPage, handleAuthCallback } from "./routes/callback";
 
 /**
- * Platform-agnostic request handler. Adapters build a Config and hand
- * requests here.
+ * The whole API surface. Runtime entry points build a Config and hand
+ * requests here; nothing below this line knows about Cloudflare.
  */
 export async function handleRequest(req: Request, config: Config): Promise<Response> {
   if (req.method === "OPTIONS") return preflight();
@@ -21,6 +21,9 @@ export async function handleRequest(req: Request, config: Config): Promise<Respo
   }
   if (pathname === "/verify" && method === "GET") {
     return handleVerifyRedirect(req, config);
+  }
+  if (pathname === "/verify/exchange" && method === "POST") {
+    return handleExchange(req, config);
   }
   if (pathname === "/callback" && method === "GET") {
     return handleCallbackPage(req, config);

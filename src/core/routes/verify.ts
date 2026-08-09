@@ -3,17 +3,24 @@ import { error, json, html } from "../lib/http";
 import { isAuthorized, publicOrigin } from "../lib/auth";
 import { buildAuthorizeUrl } from "../lib/pi";
 import { errorPage } from "../lib/pages";
+import { isAcceptableUrl } from "../lib/url";
+import { redeemCode } from "../lib/code";
 import { createSession, getSession, isSessionExpired } from "../lib/session";
 
 interface VerifyInitBody {
   ref?: string;
   callback_url?: string;
+  redirect_uri?: string;
 }
 
 /**
  * POST /verify/init
- * Called by your own integration, authenticated with AUTH_SECRET. Returns a
+ * Called by your app's server, authenticated with AUTH_SECRET. Returns a
  * verify_url to send the user to.
+ *
+ * Supply `redirect_uri` to get the user sent back to your site afterwards
+ * with a one-time code (web apps), `callback_url` to receive a webhook
+ * (bots), or both.
  */
 export async function handleVerifyInit(req: Request, config: Config): Promise<Response> {
   if (!isAuthorized(config, req)) {
@@ -27,19 +34,21 @@ export async function handleVerifyInit(req: Request, config: Config): Promise<Re
     return error("Invalid JSON body", 400);
   }
 
-  const { ref, callback_url } = body;
-  if (!callback_url) return error("callback_url is required", 400);
-  try {
-    if (new URL(callback_url).protocol !== "https:") {
-      return error("callback_url must be https", 400);
-    }
-  } catch {
-    return error("callback_url must be a valid URL", 400);
+  const { ref, callback_url, redirect_uri } = body;
+  if (!callback_url && !redirect_uri) {
+    return error("One of callback_url or redirect_uri is required", 400);
+  }
+  if (callback_url && !isAcceptableUrl(callback_url)) {
+    return error("callback_url must be an https URL (http is allowed on loopback)", 400);
+  }
+  if (redirect_uri && !isAcceptableUrl(redirect_uri)) {
+    return error("redirect_uri must be an https URL (http is allowed on loopback)", 400);
   }
 
   const { token, record } = await createSession(config, {
     ref: ref ?? "",
     callback_url,
+    redirect_uri,
   });
 
   return json({
@@ -74,4 +83,38 @@ export async function handleVerifyRedirect(req: Request, config: Config): Promis
 
   const redirectUri = `${publicOrigin(config, req)}/callback`;
   return Response.redirect(buildAuthorizeUrl(config, redirectUri, session), 302);
+}
+
+interface ExchangeBody {
+  code?: string;
+}
+
+/**
+ * POST /verify/exchange
+ * Trades the one-time code from a redirect_uri landing for the verified
+ * identity. Authenticated with AUTH_SECRET, so this runs on your server, not
+ * in the browser. Codes are single-use and expire in two minutes.
+ */
+export async function handleExchange(req: Request, config: Config): Promise<Response> {
+  if (!isAuthorized(config, req)) {
+    return error("Invalid or missing credentials", 401);
+  }
+
+  let body: ExchangeBody;
+  try {
+    body = (await req.json()) as ExchangeBody;
+  } catch {
+    return error("Invalid JSON body", 400);
+  }
+
+  if (!body.code) return error("code is required", 400);
+
+  const record = await redeemCode(config, body.code);
+  if (!record) return error("Code not found, already used, or expired", 404);
+
+  return json({
+    ref: record.ref,
+    uid: record.uid,
+    username: record.username,
+  });
 }

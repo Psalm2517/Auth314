@@ -22,12 +22,13 @@ export interface CreatedSession {
 
 export async function createSession(
   config: Config,
-  input: { ref: string; callback_url: string },
+  input: { ref: string; callback_url?: string; redirect_uri?: string },
 ): Promise<CreatedSession> {
   const token = generateToken();
   const record: SessionRecord = {
     ref: input.ref,
     callback_url: input.callback_url,
+    redirect_uri: input.redirect_uri,
     expires_at: new Date(Date.now() + SESSION_TTL_MS).toISOString(),
     used: false,
   };

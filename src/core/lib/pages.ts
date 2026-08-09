@@ -58,6 +58,11 @@ export function callbackPage(apiBase: string): string {
     .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
     .then(function (res) {
       if (!res.ok) throw new Error(res.d && res.d.error ? res.d.error : "Verification failed");
+      // Web flow: hand the user back to the app that started this.
+      if (res.d && res.d.redirect_url) {
+        location.replace(res.d.redirect_url);
+        return;
+      }
       show("ok", "\\u2713", "Verified", "You can close this window.");
     })
     .catch(function (e) { show("bad", "\\u2715", "Verification failed", e.message); });

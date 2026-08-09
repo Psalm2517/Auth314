@@ -1,5 +1,5 @@
-import { handleRequest } from "../../core/handler";
-import type { Config, SessionStore } from "../../core/types";
+import { handleRequest } from "./core/handler";
+import type { Config, SessionStore } from "./core/types";
 
 export interface Env {
   AUTH314_KV: KVNamespace;
