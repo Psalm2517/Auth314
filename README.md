@@ -208,6 +208,10 @@ src/core/       everything else, with no Cloudflare imports
 Core reaches storage through a three-method `SessionStore`, so the only
 Cloudflare-aware file is `worker.ts`.
 
+## AI disclosure
+
+This project was built with AI assistance, directed by me.
+
 ## License
 
 MIT. See [LICENSE](./LICENSE).
