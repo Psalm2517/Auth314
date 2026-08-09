@@ -9,7 +9,7 @@
 Self-hosted on Cloudflare Workers.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![CI](https://github.com/Psalm2517/Auth314/actions/workflows/ci.yml/badge.svg)](https://github.com/Psalm2517/Auth314/actions/workflows/ci.yml)
+[![CI](https://github.com/psalm2517/auth314/actions/workflows/ci.yml/badge.svg)](https://github.com/psalm2517/auth314/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 
 [Web apps](./docs/web-apps.md) · [Bots](./docs/bots.md) · [API reference](./docs/api.md) · [Setup](#setup)
@@ -126,12 +126,12 @@ Leave the redirect URI for step 4, since you don't know your Worker's URL yet.
 
 One click, which forks the repo to your account and deploys it:
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Psalm2517/Auth314)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/psalm2517/auth314)
 
 Or from your machine:
 
 ```bash
-git clone https://github.com/Psalm2517/Auth314.git && cd Auth314
+git clone https://github.com/psalm2517/auth314.git && cd auth314
 npm install
 npx wrangler deploy
 ```
