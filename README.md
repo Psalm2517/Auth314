@@ -10,9 +10,7 @@
 [![CI](https://github.com/Psalm2517/Auth314/actions/workflows/ci.yml/badge.svg)](https://github.com/Psalm2517/Auth314/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 
-[Web apps](./docs/web-apps.md) · [Bots](./docs/bots.md) · [API reference](./docs/api.md)
-
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Psalm2517/Auth314)
+[Web apps](./docs/web-apps.md) · [Bots](./docs/bots.md) · [API reference](./docs/api.md) · [Setup](#setup)
 
 </div>
 
@@ -102,24 +100,48 @@ const { verify_url } = await auth314("/verify/init", {
 
 ## Setup
 
-You need a Pi app in the [Pi Developer Portal](https://minepi.com/developers/)
-with a verified domain and Pi Sign-in enabled, which gives you a `client_id`.
+Four steps. The deploy button replaces step 2 only; the rest you do either
+way, because they involve your Pi app and your secrets.
+
+### 1. Register a Pi app
+
+In the [Pi Developer Portal](https://minepi.com/developers/): verify your
+domain, enable Pi Sign-in, and copy the `client_id` it issues. There is no
+client secret.
+
+Leave the redirect URI for step 4, since you don't know your Worker's URL yet.
+
+### 2. Deploy the Worker
+
+One click, which forks the repo to your account and deploys it:
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Psalm2517/Auth314)
+
+Or from your machine:
 
 ```bash
 git clone https://github.com/Psalm2517/Auth314.git && cd Auth314
 npm install
-
-# Create your KV namespace, then paste the id into wrangler.toml
-npx wrangler kv namespace create AUTH314_KV
-
-# Put your client_id in wrangler.toml, then set the shared secret
-npx wrangler secret put AUTH_SECRET   # openssl rand -base64 32
-
 npx wrangler deploy
 ```
 
-Finally, register `https://your-deployment/callback` as a redirect URI on your
-Pi app. It must match exactly.
+Either way, the KV namespace is created for you on first deploy.
+
+### 3. Set your config
+
+```bash
+# Your client_id from step 1 goes in wrangler.toml under [vars]
+npx wrangler secret put AUTH_SECRET   # openssl rand -base64 32
+npx wrangler deploy                   # redeploy to pick up the client_id
+```
+
+If you used the button, set both from the Cloudflare dashboard instead, under
+your Worker's Settings then Variables.
+
+### 4. Register the redirect URI
+
+Back in the Pi Developer Portal, add `https://your-deployment/callback` as a
+redirect URI. It must match exactly.
 
 ## Configuration
 

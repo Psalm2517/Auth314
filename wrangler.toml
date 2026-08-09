@@ -3,13 +3,10 @@ name = "auth314"
 main = "src/worker.ts"
 compatibility_date = "2024-06-01"
 
-# --- KV namespace binding ---
-# Create your own namespace first:
-#   npx wrangler kv namespace create AUTH314_KV
-# then paste the returned id below.
+# Wrangler creates this namespace for you on first deploy and writes the id
+# back here. To bind an existing one instead, add: id = "<your namespace id>"
 [[kv_namespaces]]
 binding = "AUTH314_KV"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 
 [vars]
 # Your Pi OAuth client id, from the Pi Developer Portal. Public value.
