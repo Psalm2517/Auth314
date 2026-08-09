@@ -7,7 +7,7 @@
 **Self-hosted Pi Sign-in, handled end to end.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![CI](https://github.com/Psalm2517/auth314/actions/workflows/ci.yml/badge.svg)](https://github.com/Psalm2517/auth314/actions/workflows/ci.yml)
+[![CI](https://github.com/Psalm2517/Auth314/actions/workflows/ci.yml/badge.svg)](https://github.com/Psalm2517/Auth314/actions/workflows/ci.yml)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-f38020.svg?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 
 </div>
